@@ -9,7 +9,8 @@ This project deploys a serverless URL shortener locally using AWS CDK and LocalS
 - **Local Development:** Uses LocalStack for local development and testing.
 - **Serverless Architecture:** Leverages AWS Lambda, API Gateway, and DynamoDB.
 
-<img width="553" alt="Screenshot 2025-04-14 at 11 51 59 AM" src="https://github.com/user-attachments/assets/fc35f32e-e1fa-4eed-8a12-96bec705ff87" />
+<img width="553" alt="Screenshot 2025-04-14 at 12 52 25 PM" src="https://github.com/user-attachments/assets/7f4e4530-88be-4813-aa5d-18f22af327ed" />
+
 
 ## Prerequisites
 
