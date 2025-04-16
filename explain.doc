@@ -1,0 +1,7 @@
+vpc.add_gateway_endpoint("DynamoDbEndpoint",
+    service=ec2.GatewayVpcEndpointAwsService.DYNAMODB
+)
+
+You don’t need to explicitly attach the VPC endpoint to the Lambda or the table — 
+it’s automatic for all AWS SDK calls from within the VPC.
+
