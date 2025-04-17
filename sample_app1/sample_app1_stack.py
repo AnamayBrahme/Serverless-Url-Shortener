@@ -8,6 +8,7 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_iam as iam,
     aws_apigateway as apigateway,
+    aws_kms as kms,
 )
 
 
@@ -26,6 +27,8 @@ class SampleApp1Stack(Stack):
             service=ec2.GatewayVpcEndpointAwsService.DYNAMODB
         )
 
+        encryption_key_dynamodbtable = kms.Key(self,"DynamoDBEncryptionKey",
+                                               enable_key_rotation=True)
         #  Create a DynamoDB table to store short codes and original URLs
         dynamodb_table = dynamodb.Table(
             self, "UrlTable",
@@ -33,20 +36,45 @@ class SampleApp1Stack(Stack):
                 name="sht_url_table",  # Partition key name
                 type=dynamodb.AttributeType.STRING
             ),
+            encryption=dynamodb.TableEncryption.CUSTOMER_MANAGED,
+            encryption_key=encryption_key_dynamodbtable,
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST  # Cost-efficient pay-per-request mode
         )
+
+        
+        
         
         # Define least privilege IAM role for Lambda (optional advanced control)
         lambda_role = iam.Role(
             self, "LambdaExecutionRole",
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole")
-            ]
-        )
-        # Give the role permission to write to DynamoDB
-        dynamodb_table.grant_read_write_data(lambda_role)
+            inline_policies={
+                "DynamoAccessPolicy":iam.PolicyDocument(
+                    statements=[
+                        iam.PolicyStatement(
+                            actions=[
+                                "dynamodb:GetItem",
+                                "dynamodb:PutItem",
+                                "dynamodb:UpdateItem",
+                                "dynamodb:Query",
+                                "dynamodb:Scan",
+                            ],
+                            resources=[dynamodb_table.table_arn]
+                        ),
+                        iam.PolicyStatement(
+                            actions=[
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:PutLogEvents",
+                            ],
+                            resources=["arn:aws:logs:*:*:*"]
+    
+                        )
+                    ]
+                )
 
+            }
+        )
 
         #  Define Lambda function for shortening URLs
         shorten_lambda = _lambda.Function(
@@ -73,12 +101,6 @@ class SampleApp1Stack(Stack):
             vpc=vpc,
             role=lambda_role
         )
-
-        dynamodb_table.grant_read_data(redirect_lambda)       # Redirect function only needs read access
-
-        #  Grant appropriate permissions to the Lambda functions
-        dynamodb_table.grant_read_write_data(shorten_lambda)  # Shorten function needs full access
-        
 
         #  API Gateway setup
         api = apigateway.RestApi(

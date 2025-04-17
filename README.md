@@ -117,6 +117,23 @@ Once deployed, you'll get the API Gateway endpoint URL to test your service.
 - Add a frontend/CLI client
 - Add monitoring (e.g., CloudWatch Alarms, Dashboards)
 
+##  Security Measures Implemented
+- 1. **DynamoDB Encryption at Rest:**
+     DynamoDB is encrypted using AWS-managed KMS keys (AES-256).
+     Encryption is enabled by default to protect data stored in the table.
+- 2. **Least Privilege IAM Roles:**
+    - Custom IAM roles are used for Lambda functions.
+    - Roles have limited permissions to perform only necessary actions.
+    - Access limited to the specific DynamoDB table ARN.
+    - AWSLambdaBasicExecutionRole used for CloudWatch logging only
+- 3. **VPC & Endpoint Isolation:**
+    - Lambda functions are deployed inside a dedicated VPC.
+    - DynamoDB Gateway VPC Endpoint is used for private access (no public internet traffic for D B operations).
+- 4. **Future Enhancements (Planned)**
+    - Implement Dead Letter Queues (DLQs) for failed Lambda invocations.
+    - Add input validation & sanitation in Lambda code.
+    - Enable CORS policy & custom error responses for API Gateway.
+
 ## Local Development with LocalStack
 
 Ensure LocalStack is running before you run `cdk deploy`. You can start LocalStack with Docker:
